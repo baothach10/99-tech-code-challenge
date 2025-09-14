@@ -1,0 +1,77 @@
+Computational inefficiencies and anti-patterns found in the code block below:
+1. Using any removes TypeScript benefits.
+2. WalletBalance interface does not declare "blockchain", but the code assumes it exists (balance.blockchain). This will cause type mismatch or force unsafe casting.
+3. lhsPriority is undefined (variable not declared).
+4. Wrong logic: currently keeps balances with amount ≤ 0 instead of filtering them out.
+5. Filtering and sorting are entangled inside useMemo, which hurts readability and testability.
+6. Using array index as a React key is an anti-pattern, which causes wasted re-renders when items are reordered.
+7. The calculation (sortedBalances) only depends on balances and getPriority.
+8. formattedBalances variable is unused (should be removed to prevent computational waste)
+9. toFixed() without precision defaults to 0 decimal places, so it will lose information.
+10. Formatting should ideally be handled in a utility function or at display layer, not inside mapping logic.
+11. getPriority is called multiple times per render (once in filter, once in sort, etc).
+12. useMemo is sometimes misused: wrapping logic that isn’t expensive or that still recomputes due to wrong deps.
+13. Data transformation (filtering, sorting, formatting) is mixed with rendering.
+
+Refactored Version of the Messy React:
+
+
+interface WalletBalance {
+    currency: string;
+    amount: number;
+    blockchain: Blockchain; // new field
+}
+
+type Blockchain = 'Osmosis' | 'Ethereum' | 'Arbitrum' | 'Zilliqa' | 'Neo';
+
+interface FormattedWalletBalance extends WalletBalance {
+    formatted: string;
+    usdValue: number;
+}
+
+interface Props extends BoxProps { }
+
+const getPriority = (blockchain: Blockchain): number => {
+    switch (blockchain) {
+        case 'Osmosis': return 100;
+        case 'Ethereum': return 50;
+        case 'Arbitrum': return 30;
+        case 'Zilliqa': return 20;
+        case 'Neo': return 20;
+        default: return -99;
+    }
+};
+
+const WalletPage: React.FC<Props> = (props) => {
+    const { children, ...rest } = props;
+    const balances = useWalletBalances();
+    const prices = usePrices();
+
+    const sortedBalances = useMemo(() => {
+        return balances
+            .filter((b) => b.amount > 0 && getPriority(b.blockchain) > -99)
+            .sort((a, b) => getPriority(b.blockchain) - getPriority(a.blockchain));
+    }, [balances]);
+
+    const formattedBalances: FormattedWalletBalance[] = useMemo(() => {
+        return sortedBalances.map((b) => ({
+            ...b,
+            formatted: b.amount.toFixed(2),
+            usdValue: (prices[b.currency] ?? 0) * b.amount,
+        }));
+    }, [sortedBalances, prices]);
+
+    return (
+        <div {...rest}>
+            {formattedBalances.map((balance) => (
+                <WalletRow
+                    className={classes.row}
+                    key={balance.currency}
+                    amount={balance.amount}
+                    usdValue={balance.usdValue}
+                    formattedAmount={balance.formatted}
+                />
+            ))}
+        </div>
+    );
+};

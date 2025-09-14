@@ -1,27 +1,46 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Fancy Form</title>
-
-  <!-- You may add more stuff here -->
+  <title>Currency Swap</title>
   <link href="style.css" rel="stylesheet" />
 </head>
-
 <body>
+  <div class="swap-card">
+    <h2>Swap</h2>
+    <form onsubmit="return false">
+      <!-- From -->
+      <div class="field">
+        <label for="input-amount">Amount to send</label>
+        <div class="input-group">
+          <img id="fromLogo" src="" alt="logo" />
+          <select id="fromToken"></select>
+          <input id="input-amount" type="number" placeholder="0.0" min="0" step="any" />
+        </div>
+        <div class="error" id="fromError"></div>
+      </div>
 
-  <!-- You may reorganise the whole HTML, as long as your form achieves the same effect. -->
-  <form onsubmit="return !1">
-    <h5>Swap</h5>
-    <label for="input-amount">Amount to send</label>
-    <input id="input-amount" />
+      <!-- To -->
+      <div class="field">
+        <label for="output-amount">Amount to receive</label>
+        <div class="input-group">
+          <img id="toLogo" src="" alt="logo" />
+          <select id="toToken"></select>
+          <input id="output-amount" type="text" placeholder="0.0" readonly />
+        </div>
+        <div class="error" id="toError"></div>
+      </div>
 
-    <label for="output-amount">Amount to receive</label>
-    <input id="output-amount" />
+      <!-- Buttons -->
+      <div class="actions">
+        <button type="button" id="swapDirection">⇅</button>
+        <button type="submit" class="swap-btn">CONFIRM SWAP</button>
+      </div>
+      <div class="rate" id="rateDisplay"></div>
+    </form>
+  </div>
 
-    <button>CONFIRM SWAP</button>
-  </form>
   <script src="script.js"></script>
 </body>
-
 </html>
